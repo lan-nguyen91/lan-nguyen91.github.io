@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Flip Calculator</title>
+    <meta name="description" content="Flip Calculator">
+    <meta name="author" content="Lan Nguyen">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+    <div class="container-fluid">
+        <form>
+            <div class="form-group row">
+                <label for="buy_price" class="col-sm-2 col-form-label">Buying Price (000) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="buy_price" placeholder="250">
+                </div>
+                <label for="inputPassword" class="col-sm-2 col-form-label">1st Closing (%) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="buy_close" placeholder="2">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputPassword" class="col-sm-2 col-form-label">Selling Price (000) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="sell_price" placeholder="350">
+                </div>
+                <label for="inputPassword" class="col-sm-2 col-form-label">2nd Closing (%) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="sell_close" placeholder="2">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="fix_price" class="col-sm-2 col-form-label">Fix Cost (000) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="fix_price" placeholder="40">
+                </div>
+                <label for="mo_sell" class="col-sm-2 col-form-label">Month Sell</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="mo_sell" placeholder="2">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="down" class="col-sm-2 col-form-label">Total Down %</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="down" placeholder="5">
+                </div>
+                <label for="rate" class="col-sm-2 col-form-label">Rate (%) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="rate" placeholder="4.5">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="pmi" class="col-sm-2 col-form-label">PMI (dollars) </label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="pmi" placeholder="80">
+                </div>
+                <div class="col-sm-4">
+                    <button type="submit" class="btn btn-primary" id="calculate">Calculate</button>
+                </div>
+            </div>
+        </form>
+        <br>
+        <br>
+        <hr>
+        <table class="table">
+            <thead class="thead-inverse">
+                <tr>
+                    <th>Cost</th>
+                    <th>Mort/mo</th>
+                    <th>Profit</th>
+                    <th>ROI</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                	<td>
+                		<p id="costT"></p>
+                		<p id="breakdownT"></p>
+                		<p id="splitCT"></p>
+                	</td>
+                    <td>
+                    	<p id="mortT"></p>
+                    	<p id="totalMortT"></p>
+                    </td>
+                    <td>
+                    	<p id="profT"></p>
+                    	<p id="splitPT"></p>
+                    </td>
+                    <td>
+                    	<p id="roiT"></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js " integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n " crossorigin="anonymous "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js " integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb " crossorigin="anonymous "></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js " integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn " crossorigin="anonymous "></script>
+    <script>
+    $(document).ready(() => {
+        function getVal(val) {
+            let result = $(`#${val}`).val() || $(`#${val}`).attr('placeholder');
+            return parseInt(result);
+        }
+
+        function calculate() {
+            let buyPrice = getVal('buy_price') * 1000;
+            let sellPrice = getVal('sell_price') * 1000;
+            let down = getVal('down');
+            let fix = getVal('fix_price') * 1000;
+            let rate = getVal('rate');
+            let pmi = getVal('pmi');
+            let buyClose = getVal('buy_close');
+            let sellClose = getVal('sell_close');
+            let sellMonth = getVal('mo_sell');
+
+            // ----------
+            let downInDollar = down * buyPrice / 100;
+            let amount = buyPrice - downInDollar;
+            let r = rate / (100 * 12);
+            let nom = r * Math.pow(1 + r, 30 * 12);
+            let denom = Math.pow(1 + r, 30 * 12) - 1;
+
+            let mortgage = (amount * nom / denom) + pmi;
+
+            // ------------
+            let close1InDollar = buyClose * buyPrice / 100;
+            let close2InDollar = sellClose * sellPrice / 100;
+
+            let totalCost = close1InDollar + close2InDollar + fix + (mortgage * sellMonth) + downInDollar;
+            let totalProfit = sellPrice - buyPrice - totalCost;
+
+            console.log({
+                mortgage,
+                close1InDollar,
+                close2InDollar,
+                totalCost,
+                totalProfit
+            });
+
+            $('#costT').html(totalCost.toFixed(2));
+            $('#breakdownT').html(`<ul>
+            	<li>Down: ${downInDollar}</li>
+            	<li>Fix: ${fix}</li>
+            	<li>Close1: ${close1InDollar}</li>
+            	<li>Close2: ${close2InDollar}</li>
+            </ul`);
+            $('#splitCT').html(`Split 2: ${totalCost.toFixed(2)/2}`)
+            $('#mortT').html(mortgage.toFixed(2));
+            $('#totalMortT').html(`Total Mortgage: ${(mortgage * sellMonth).toFixed(2)}`);
+            $('#profT').html(totalProfit.toFixed(2));
+            $('#splitPT').html(`Split 2: ${totalProfit.toFixed(2)/2}`)
+            $('#roiT').html( (((sellPrice-buyPrice)/buyPrice)*100).toFixed(2) + '%');
+        }
+
+        $("#calculate").click((e) => {
+            e.preventDefault();
+            calculate();
+        })
+
+    });
+    </script>
+</body>
+
+</html>
